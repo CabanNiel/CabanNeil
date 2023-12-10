@@ -1,38 +1,43 @@
-package systems;
-
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class EmailLoginView extends JFrame {
-    private static Map<String, String> userDatabase = new HashMap<>();
+    private static Map<String, User> userDatabase = new HashMap<>();
+
     private JPanel cardPanel;
     private CardLayout cardLayout;
+    private User currentUser;
+    private JTextArea emailTextArea;
 
     public EmailLoginView() {
-        super("Email Login System");
+        super("Email System");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setBounds(411, 100, 400, 500);
+        setBounds(411, 100, 600, 400);
         setLocationRelativeTo(null);
 
-        // Create CardLayout and JPanel to hold cards
         cardLayout = new CardLayout();
         cardPanel = new JPanel(cardLayout);
 
-        // Create and add the initial card (welcome panel)
         JPanel welcomePanel = createWelcomePanel();
         cardPanel.add(welcomePanel, "Welcome");
 
-        // Create and add the sign-in panel
         JPanel signInPanel = createSignInPanel();
         cardPanel.add(signInPanel, "SignIn");
 
-        // Create and add the signup panel
         JPanel signUpPanel = createSignUpPanel();
         cardPanel.add(signUpPanel, "SignUp");
+
+        JPanel emailPanel = createEmailPanel();
+        cardPanel.add(emailPanel, "Email");
 
         add(cardPanel);
         setVisible(true);
@@ -42,49 +47,38 @@ public class EmailLoginView extends JFrame {
         JPanel welcomePanel = new JPanel();
 
         JLabel welcomeLabel = new JLabel("WELCOME");
-        welcomeLabel.setBounds(108, 21, 181, 40);
         welcomeLabel.setFont(new Font("Kadwa", Font.BOLD, 32));
-        welcomeLabel.setForeground(Color.BLACK);
 
         JPanel greetingsPanel = new JPanel();
-        greetingsPanel.setLayout(null);
-        greetingsPanel.setBounds(108, 120, 192, 127);
+        greetingsPanel.setLayout(new GridLayout(2, 1));
         greetingsPanel.setBackground(Color.decode("#F4F27E"));
 
-        JLabel firstSentence = new JLabel("Greetings my dear user,");
-        firstSentence.setBounds(0, 30, 192, 30);
+        JLabel firstSentence = new JLabel("Greetings, dear user,");
         firstSentence.setHorizontalAlignment(SwingConstants.CENTER);
         greetingsPanel.add(firstSentence);
 
         JLabel additionalText = new JLabel("Welcome to our system!");
-        additionalText.setBounds(0, 50, 192, 30);
         additionalText.setHorizontalAlignment(SwingConstants.CENTER);
         greetingsPanel.add(additionalText);
 
+        // Use a JPanel with FlowLayout for the buttons
+        JPanel buttonPanel = new JPanel(new FlowLayout());
+        buttonPanel.setBackground(Color.decode("#FFEED9"));
+
         JButton signInButton = new JButton("Sign In");
-        signInButton.setBounds(111, 269, 194, 27);
-        signInButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                cardLayout.show(cardPanel, "SignIn");
-            }
-        });
+        signInButton.addActionListener(e -> cardLayout.show(cardPanel, "SignIn"));
 
         JButton signUpButton = new JButton("Sign Up");
-        signUpButton.setBounds(111, 318, 194, 27);
-        signUpButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                cardLayout.show(cardPanel, "SignUp");
-            }
-        });
+        signUpButton.addActionListener(e -> cardLayout.show(cardPanel, "SignUp"));
 
-        welcomePanel.setLayout(null);
+        buttonPanel.add(signInButton);
+        buttonPanel.add(signUpButton);
+
+        welcomePanel.setLayout(new BorderLayout());
         welcomePanel.setBackground(Color.decode("#FFEED9"));
-        welcomePanel.add(welcomeLabel);
-        welcomePanel.add(greetingsPanel);
-        welcomePanel.add(signInButton);
-        welcomePanel.add(signUpButton);
+        welcomePanel.add(welcomeLabel, BorderLayout.NORTH);
+        welcomePanel.add(greetingsPanel, BorderLayout.CENTER);
+        welcomePanel.add(buttonPanel, BorderLayout.SOUTH);
 
         return welcomePanel;
     }
@@ -93,28 +87,29 @@ public class EmailLoginView extends JFrame {
         JPanel signInPanel = new JPanel();
 
         JLabel usernameLabel = new JLabel("Username:");
-        usernameLabel.setBounds(50, 30, 80, 25);
         JTextField usernameField = new JTextField();
-        usernameField.setBounds(140, 30, 150, 25);
 
         JLabel passwordLabel = new JLabel("Password:");
-        passwordLabel.setBounds(50, 70, 80, 25);
         JPasswordField passwordField = new JPasswordField();
-        passwordField.setBounds(140, 70, 150, 25);
 
         JButton signInButton = new JButton("Sign In");
-        signInButton.setBounds(111, 120, 194, 27);
+        signInButton.addActionListener(e -> {
+            String username = usernameField.getText();
+            String password = new String(passwordField.getPassword());
 
-        JButton backToWelcomeButton = new JButton("Back to Welcome");
-        backToWelcomeButton.setBounds(111, 160, 194, 27);
-        backToWelcomeButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                cardLayout.show(cardPanel, "Welcome");
+            if (authenticateUser(username, password)) {
+                cardLayout.show(cardPanel, "Email");
+                currentUser = userDatabase.get(username);
+                refreshEmails(emailTextArea);
+            } else {
+                JOptionPane.showMessageDialog(null, "Invalid username or password", "Error", JOptionPane.ERROR_MESSAGE);
             }
         });
 
-        signInPanel.setLayout(null);
+        JButton backToWelcomeButton = new JButton("Back to Welcome");
+        backToWelcomeButton.addActionListener(e -> cardLayout.show(cardPanel, "Welcome"));
+
+        signInPanel.setLayout(new GridLayout(4, 2));
         signInPanel.setBackground(Color.decode("#FFEED9"));
         signInPanel.add(usernameLabel);
         signInPanel.add(usernameField);
@@ -129,61 +124,198 @@ public class EmailLoginView extends JFrame {
     private JPanel createSignUpPanel() {
         JPanel signUpPanel = new JPanel();
 
-        JLabel signUpLabel = new JLabel("SIGN UP");
-        signUpLabel.setBounds(142, 21, 181, 40);
-        signUpLabel.setFont(new Font("Kadwa", Font.BOLD, 32));
-        signUpLabel.setForeground(Color.BLACK);
+        JLabel newUsernameLabel = new JLabel("New Username:");
+        JTextField newUsernameField = new JTextField();
 
-        JLabel usernameLabel = new JLabel("Username:");
-        usernameLabel.setBounds(50, 70, 80, 25);
-        JTextField usernameField = new JTextField();
-        usernameField.setBounds(140, 70, 150, 25);
+        JLabel newPasswordLabel = new JLabel("New Password:");
+        JPasswordField newPasswordField = new JPasswordField();
 
-        JLabel passwordLabel = new JLabel("Password:");
-        passwordLabel.setBounds(50, 110, 80, 25);
-        JPasswordField passwordField = new JPasswordField();
-        passwordField.setBounds(140, 110, 150, 25);
+        JLabel birthDateLabel = new JLabel("Birth Date (MM/dd/yyyy):");
+        JFormattedTextField birthDateField = new JFormattedTextField(createDateFormatter());
+        birthDateField.setColumns(10);
+
+        JLabel roleLabel = new JLabel("Role:");
+        JTextField roleField = new JTextField();
+
+        JLabel familyNameLabel = new JLabel("Family Name:");
+        JTextField familyNameField = new JTextField();
+
+        JLabel givenNameLabel = new JLabel("Given Name:");
+        JTextField givenNameField = new JTextField();
 
         JButton signUpButton = new JButton("Sign Up");
-        signUpButton.setBounds(111, 160, 194, 27);
-        signUpButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                // Implement signup logic here
-                // You may want to add the user to the userDatabase map
-                // For simplicity, let's just print the entered username and password
-                String username = usernameField.getText();
-                String password = new String(passwordField.getPassword());
-                System.out.println("New user signed up: " + username + ", Password: " + password);
+        signUpButton.addActionListener(e -> {
+            String newUsername = newUsernameField.getText();
+            String newPassword = new String(newPasswordField.getPassword());
+            String birthDateText = birthDateField.getText();
+            String role = roleField.getText();
 
-                // After signup, you might want to switch to the sign-in panel or perform other actions
-                cardLayout.show(cardPanel, "SignIn");
-            }
-        });
+            if (newUsername.isEmpty() || newPassword.isEmpty() || birthDateText.isEmpty() || role.isEmpty()) {
+                JOptionPane.showMessageDialog(null, "Please enter valid information for all fields", "Error", JOptionPane.ERROR_MESSAGE);
+            } else if (userDatabase.containsKey(newUsername)) {
+                JOptionPane.showMessageDialog(null, "Username already exists, please choose a different one", "Error", JOptionPane.ERROR_MESSAGE);
+            } else {
+                User newUser = new User(newUsername, newPassword, parseDate(birthDateText), role, familyNameField.getText(), givenNameField.getText());
+                userDatabase.put(newUsername, newUser);
+                JOptionPane.showMessageDialog(null, "Account created successfully", "Success", JOptionPane.INFORMATION_MESSAGE);
 
-        JButton backToWelcomeButton = new JButton("Back to Welcome");
-        backToWelcomeButton.setBounds(111, 200, 194, 27);
-        backToWelcomeButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
                 cardLayout.show(cardPanel, "Welcome");
             }
         });
 
-        signUpPanel.setLayout(null);
+        JButton backToWelcomeButton = new JButton("Back to Welcome");
+        backToWelcomeButton.addActionListener(e -> cardLayout.show(cardPanel, "Welcome"));
+
+        signUpPanel.setLayout(new GridLayout(10, 2));
         signUpPanel.setBackground(Color.decode("#FFEED9"));
-        signUpPanel.add(signUpLabel);
-        signUpPanel.add(usernameLabel);
-        signUpPanel.add(usernameField);
-        signUpPanel.add(passwordLabel);
-        signUpPanel.add(passwordField);
+        signUpPanel.add(newUsernameLabel);
+        signUpPanel.add(newUsernameField);
+        signUpPanel.add(newPasswordLabel);
+        signUpPanel.add(newPasswordField);
+        signUpPanel.add(birthDateLabel);
+        signUpPanel.add(birthDateField);
+        signUpPanel.add(roleLabel);
+        signUpPanel.add(roleField);
+        signUpPanel.add(familyNameLabel);
+        signUpPanel.add(familyNameField);
+        signUpPanel.add(givenNameLabel);
+        signUpPanel.add(givenNameField);
         signUpPanel.add(signUpButton);
         signUpPanel.add(backToWelcomeButton);
 
         return signUpPanel;
     }
 
+    private SimpleDateFormat createDateFormatter() {
+        return new SimpleDateFormat("MM/dd/yyyy");
+    }
+
+    private Date parseDate(String dateString) {
+        try {
+            return createDateFormatter().parse(dateString);
+        } catch (ParseException e) {
+            return null;
+        }
+    }
+
+    private JPanel createEmailPanel() {
+        JPanel emailPanel = new JPanel();
+
+        emailTextArea = new JTextArea();
+        JScrollPane scrollPane = new JScrollPane(emailTextArea);
+
+        JButton composeButton = new JButton("Compose");
+        composeButton.addActionListener(e -> {
+            String message = JOptionPane.showInputDialog(null, "Enter your message:", "Compose Email", JOptionPane.PLAIN_MESSAGE);
+            if (message != null && !message.isEmpty()) {
+                currentUser.getMailbox().add(new Email(currentUser.getUsername(), "Subject", message));
+                refreshEmails(emailTextArea);
+            }
+        });
+
+        JButton inboxButton = new JButton("Inbox");
+        inboxButton.addActionListener(e -> refreshEmails(emailTextArea));
+
+        JButton signOutButton = new JButton("Sign Out");
+        signOutButton.addActionListener(e -> {
+            currentUser = null;
+            cardLayout.show(cardPanel, "Welcome");
+        });
+
+        emailPanel.setLayout(new BorderLayout());
+        emailPanel.setBackground(Color.decode("#FFEED9"));
+        emailPanel.add(scrollPane, BorderLayout.CENTER);
+        emailPanel.add(composeButton, BorderLayout.SOUTH);
+        emailPanel.add(inboxButton, BorderLayout.SOUTH);
+        emailPanel.add(signOutButton, BorderLayout.SOUTH);
+
+        return emailPanel;
+    }
+
+    private boolean authenticateUser(String username, String password) {
+        return userDatabase.containsKey(username) && userDatabase.get(username).getPassword().equals(password);
+    }
+
+    private void refreshEmails(JTextArea emailTextArea) {
+        if (currentUser != null) {
+            StringBuilder emails = new StringBuilder("Inbox:\n");
+            List<Email> inbox = currentUser.getMailbox();
+            for (Email email : inbox) {
+                emails.append(email).append("\n");
+            }
+            emailTextArea.setText(emails.toString());
+        }
+    }
+
+    private static class User {
+        private String username;
+        private String password;
+        private Date birthDate;
+        private String role;
+        private String familyName;
+        private String givenName;
+        private List<Email> mailbox;
+
+        public User(String username, String password, Date birthDate, String role, String familyName, String givenName) {
+            this.username = username;
+            this.password = password;
+            this.birthDate = birthDate;
+            this.role = role;
+            this.familyName = familyName;
+            this.givenName = givenName;
+            this.mailbox = new ArrayList<>();
+        }
+
+        public String getUsername() {
+            return username;
+        }
+
+        public String getPassword() {
+            return password;
+        }
+
+        public Date getBirthDate() {
+            return birthDate;
+        }
+
+        public String getRole() {
+            return role;
+        }
+
+        public String getFamilyName() {
+            return familyName;
+        }
+
+        public String getGivenName() {
+            return givenName;
+        }
+
+        public List<Email> getMailbox() {
+            return mailbox;
+        }
+    }
+
+    private static class Email {
+        private String sender;
+        private String subject;
+        private String content;
+
+        public Email(String sender, String subject, String content) {
+            this.sender = sender;
+            this.subject = subject;
+            this.content = content;
+        }
+
+        @Override
+        public String toString() {
+            return "From: " + sender + "\nSubject: " + subject + "\n" + content;
+        }
+    }
+
     public static void main(String[] args) {
+        userDatabase.put("user1", new User("user1", "password1", new Date(), "student", "Doe", "John"));
+        userDatabase.put("user2", new User("user2", "password2", new Date(), "business", "Smith", "Alice"));
+
         SwingUtilities.invokeLater(() -> {
             new EmailLoginView();
         });
