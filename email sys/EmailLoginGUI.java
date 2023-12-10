@@ -10,7 +10,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class EmailLoginView extends JFrame {
+public class EmailSystem extends JFrame {
     private static Map<String, User> userDatabase = new HashMap<>();
 
     private JPanel cardPanel;
@@ -18,7 +18,8 @@ public class EmailLoginView extends JFrame {
     private User currentUser;
     private JTextArea emailTextArea;
 
-    public EmailLoginView() {
+    // Constructor
+    public EmailSystem() {
         super("Email System");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setBounds(411, 100, 600, 400);
@@ -27,6 +28,7 @@ public class EmailLoginView extends JFrame {
         cardLayout = new CardLayout();
         cardPanel = new JPanel(cardLayout);
 
+        // Create and add panels to the cardPanel
         JPanel welcomePanel = createWelcomePanel();
         cardPanel.add(welcomePanel, "Welcome");
 
@@ -43,6 +45,7 @@ public class EmailLoginView extends JFrame {
         setVisible(true);
     }
 
+    // Create panel for the welcome screen
     private JPanel createWelcomePanel() {
         JPanel welcomePanel = new JPanel();
 
@@ -83,6 +86,7 @@ public class EmailLoginView extends JFrame {
         return welcomePanel;
     }
 
+    // Create panel for user sign-in
     private JPanel createSignInPanel() {
         JPanel signInPanel = new JPanel();
 
@@ -121,6 +125,7 @@ public class EmailLoginView extends JFrame {
         return signInPanel;
     }
 
+    // Create panel for user sign-up
     private JPanel createSignUpPanel() {
         JPanel signUpPanel = new JPanel();
 
@@ -186,10 +191,12 @@ public class EmailLoginView extends JFrame {
         return signUpPanel;
     }
 
+    // Create a SimpleDateFormat for date parsing
     private SimpleDateFormat createDateFormatter() {
         return new SimpleDateFormat("MM/dd/yyyy");
     }
 
+    // Parse date string into a Date object
     private Date parseDate(String dateString) {
         try {
             return createDateFormatter().parse(dateString);
@@ -198,6 +205,7 @@ public class EmailLoginView extends JFrame {
         }
     }
 
+    // Create panel for email functionality
     private JPanel createEmailPanel() {
         JPanel emailPanel = new JPanel();
 
@@ -232,10 +240,12 @@ public class EmailLoginView extends JFrame {
         return emailPanel;
     }
 
+    // Authenticate user based on username and password
     private boolean authenticateUser(String username, String password) {
         return userDatabase.containsKey(username) && userDatabase.get(username).getPassword().equals(password);
     }
 
+    // Refresh the email text area with the contents of the user's inbox
     private void refreshEmails(JTextArea emailTextArea) {
         if (currentUser != null) {
             StringBuilder emails = new StringBuilder("Inbox:\n");
@@ -247,6 +257,7 @@ public class EmailLoginView extends JFrame {
         }
     }
 
+    // User class representing a user with various attributes
     private static class User {
         private String username;
         private String password;
@@ -295,6 +306,7 @@ public class EmailLoginView extends JFrame {
         }
     }
 
+    // Email class representing an email with sender, subject, and content
     private static class Email {
         private String sender;
         private String subject;
@@ -312,12 +324,13 @@ public class EmailLoginView extends JFrame {
         }
     }
 
+    // Main method to initialize the user database and launch the GUI
     public static void main(String[] args) {
         userDatabase.put("user1", new User("user1", "password1", new Date(), "student", "Doe", "John"));
         userDatabase.put("user2", new User("user2", "password2", new Date(), "business", "Smith", "Alice"));
 
         SwingUtilities.invokeLater(() -> {
-            new EmailLoginView();
+            new EmailSystem();
         });
     }
 }
